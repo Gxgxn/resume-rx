@@ -4,6 +4,7 @@ import { usePuterStore } from '~/lib/puter';
 import Navbar from '../components/Navbar';
 import { convertPdfToImage } from '~/lib/pdf2img';
 import { generateUUID } from '~/lib/utils';
+import { prepareInstructions } from 'constants/index';
 const Upload = () => {
   const { auth, isLoading, fs, ai, kv } = usePuterStore();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,8 +37,8 @@ const Upload = () => {
     if (!imageFile.file) return setStatusText('Failed to convert PDF to image');
 
     setStatusText('Uploading Resume Image...');
-    const uploadImage = await fs.upload([imageFile.file]);
-    if (!uploadImage) return setStatusText('Failed to upload image');
+    const uploadedImage = await fs.upload([imageFile.file]);
+    if (!uploadedImage) return setStatusText('Failed to upload image');
 
     setStatusText('Preparing Data...');
 
@@ -48,17 +49,30 @@ const Upload = () => {
       jobTitle,
       jobDescription,
       resumePath: uploadFile.path,
-      imagePath: uploadImage.path,
+      imagePath: uploadedImage.path,
       feedback: '',
     };
     await kv.set(`resume_${uuid}`, JSON.stringify(metadata));
     setStatusText('Analyzing Resume...');
 
-    // const feedback = await ai.feedback(
-    //   uploadFile.path,
+    const feedback = await ai.feedback(
+      uploadedImage.path,
+      prepareInstructions({ jobTitle, jobDescription })
+    );
 
-    // );
-    // if (!feedback) return setStatusText('Failed to analyze resume');
+    if (!feedback) return setStatusText('Failed to analyze resume');
+
+    const feedbackText =
+      typeof feedback.message.content === 'string'
+        ? feedback.message.content
+        : feedback.message.content[0].text;
+    metadata.feedback = JSON.parse(feedbackText);
+    await kv.set(`resume_${uuid}`, JSON.stringify(metadata));
+    setStatusText('Resume Analyzed Successfully!');
+    setIsProcessing(false);
+    setFile(null);
+
+    console.log(feedback);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,6 +84,8 @@ const Upload = () => {
     const jobTitle = formData.get('job-title') as string;
     const jobDescription = formData.get('job-description') as string;
     if (!companyName || !jobTitle || !jobDescription || !file) return;
+
+    handleAnalyze({ companyName, jobTitle, jobDescription, file });
   };
   return (
     <main className="bg-[url('/images/bg-main.svg')]">
