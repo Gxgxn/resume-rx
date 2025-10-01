@@ -118,7 +118,6 @@ const Upload = () => {
                   id="company-name"
                   name="company-name"
                   placeholder="Company Name"
-                  required
                 />
               </div>
               <div className="form-div">
@@ -128,7 +127,6 @@ const Upload = () => {
                   id="job-title"
                   name="job-title"
                   placeholder="Job Title"
-                  required
                 />
               </div>
               <div className="form-div">
@@ -138,7 +136,6 @@ const Upload = () => {
                   id="job-description"
                   name="job-description"
                   placeholder="Job Description"
-                  required
                   className="resize-none"
                 />
               </div>
