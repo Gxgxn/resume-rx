@@ -5,9 +5,11 @@ import Navbar from '../components/Navbar';
 import { convertPdfToImage } from '~/lib/pdf2img';
 import { generateUUID } from '~/lib/utils';
 import { prepareInstructions } from 'constants/index';
+import { useNavigate } from 'react-router';
 const Upload = () => {
   const { auth, isLoading, fs, ai, kv } = usePuterStore();
   const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
   const [statusText, setStatusText] = useState('Upload Resume');
   const [file, setFile] = useState<File | null>(null);
 
@@ -73,6 +75,7 @@ const Upload = () => {
     setFile(null);
 
     console.log(feedback);
+    navigate(`/resume/${uuid}`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
